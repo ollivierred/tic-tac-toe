@@ -21,10 +21,8 @@
 
         (function gameStart(){
             startGameButton.addEventListener("click", function() {
-                if(this.tagName === "A") {
-                    screenStart.style.display = "none";
-                    gameBoard.style.display = "inherit";
-                }
+                screenStart.style.display = "none";
+                gameBoard.style.display = "inherit";
             });
         }());
 
@@ -72,7 +70,15 @@
             (function gameFinish() {
                 movesLeft -= 1;
                 console.log("number of moves left " + movesLeft);
-                if(!movesLeft > 0) {
+                // Track each box filled, record its location on the board, and what it was filled with
+
+                // Check for winner || Tie
+                // if player "X" has 3 in a row: horizontally || vertically || diagonally
+                // if player "O" has 3 in a row: horizontally || vertically || diagonally
+                // else it is a tie
+                // Prepare screenWin and message
+
+                if(movesLeft === 0) {
                     // Controls events at the end of each game
                     gameBoard.style.display = "none";
                     screenWin.style.display = "inherit";
