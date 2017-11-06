@@ -134,5 +134,30 @@
             }
         }, []);
         console.log(plays);
+        debugger
+        winPattern.forEach(function(currentValue, index, array) {
+            currentValue.every(function(element, index, array) {
+                if(plays.indexOf(element) > -1 ) {
+                    console.log("Game Over");
+                }
+                // var pattern = array;
+                // console.log(pattern);
+            })
+            
+            // plays.every(function(element, index, array) {
+            //     console.log(index, element);
+            // })
+        });
+        
+        debugger
+        // winPattern.every(function(element, index, array) {
+        //     console.log([index, element]);
+
+            // if(plays.indexOf(currentValue) > -1) {
+            //     console.log("Winner");
+            // }
+
+            
+        // });
         
     }
