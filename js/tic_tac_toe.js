@@ -29,10 +29,11 @@
     $p1.addClass("active");
 
     var activeBoard = [ 
-        null,null,null,
-        null,null,null,
-        null,null,null 
+        "","","",
+        "","","",
+        "","","" 
     ];
+
 
     function resetBoard() {
         var $box = $(".box");
@@ -42,13 +43,21 @@
                 $box.removeClass("box-filled-2");
             }
         })
-
         player = 1;
         $p1.addClass("active");
         $p2.removeClass("active");
-        activeBoard = [ null,null,null,null,null,null,null,null,null ];
-
+        activeBoard = [ "","","","","","","","","" ];
     }
+
+        // Controls event on window load
+    // window.addEventListener("load", function() {
+    //     screenStart.style.display = "inherit";
+    // }, false);
+
+    // startGameButton.addEventListener("click", function() {
+    //      screenStart.style.display = "none";
+    //      gameBoard.style.display = "inherit";
+    // }, false);
 
     //Controls tic-tac-toe board events
     const gameBoard = document.querySelector(".boxes");
@@ -62,7 +71,7 @@
     // --------------------------------------------------------------
     // BOXCLICK FUNCTION
     // --------------------------------------------------------------
-    function boxClick(box){
+    function boxClick(box)  {
         const clickedBox = box.target;
         playerTurn(clickedBox);
     }
@@ -103,37 +112,63 @@
     // CHECK FOR WINNER FUNCTION
     // --------------------------------------------------------------
     function checkForWinner(board, currentPlayer) {
-        var playerPattern = [];
-        board.forEach(function(boardToken, index, arr) {
-            if (boardToken === currentPlayer) {
-                playerPattern.push(index);
-            } 
-        })
-        console.log(playerPattern);
-        // debugger
+        var filled = isBoardFilled(board);
         var winner = null;
-        winPattern.forEach(function(thisPattern, index, array) {
+
+        if (filled) {
+            winner = {player: "tie"}
+        } else {
+            var playerPattern = [];
+            board.forEach(function(boardToken, index, arr) {
+                if (boardToken === currentPlayer) {
+                    playerPattern.push(index);
+                } 
+            })
+            console.log(playerPattern);
+
             // debugger
-            if(thisPattern.every(element => playerPattern.indexOf(element) > -1)) {
-                console.log("You won player " + currentPlayer);
-                winner = {player: currentPlayer};
-            }
-        })
+            winPattern.forEach(function(thisPattern, index, array) {
+                // debugger
+                if(thisPattern.every(element => playerPattern.indexOf(element) > -1)) {
+                    console.log("You won player " + currentPlayer);
+                    winner = {player: currentPlayer};
+                }
+            })
+        }
         return winner;
+    }
+
+    // --------------------------------------------------------------
+    // IS BOARD FILLED FUNCTION
+    // --------------------------------------------------------------
+    function isBoardFilled(activeBoard) {
+        // debugger
+        var filled = false;
+        if (activeBoard.every(slot => slot !== "")) {
+            filled = true;
+        }
+        console.log(filled);
+        return filled;
     }
 
     // --------------------------------------------------------------
     // END OF GAME FUNCTION
     // --------------------------------------------------------------
     function endOfGame(winner) {
+        var message = document.querySelector(".message");
+        var screenContent;
+
         $(screenWin).removeClass("screen-win-one screen-win-two");
         $(screenWin).addClass("screen-win-" + winner.player);   //"screen-win-one", "screen-win-two", "screen-win-tie"
-        var message = document.querySelector(".message");
-        message.textContent = "Winner";
-
+        
+        if (winner.player === "one" || winner.player === "two") {
+            screenContent = "Winner";
+        } else if (winner.player === "tie") {
+            screenContent = "Tie";
+        }
+        message.textContent = screenContent;
         gameBoard.style.display = "none";
         screenWin.style.display = "inherit";
-
     }
 
     // --------------------------------------------------------------
@@ -144,15 +179,5 @@
         screenWin.style.display = "none";
         gameBoard.style.display = "inherit";
     }
-
-    // Controls event on window load
-    // window.addEventListener("load", function() {
-    //     screenStart.style.display = "inherit";
-    // }, false);
-
-    // startGameButton.addEventListener("click", function() {
-    //      screenStart.style.display = "none";
-    //      gameBoard.style.display = "inherit";
-    // }, false);
 
 }());
