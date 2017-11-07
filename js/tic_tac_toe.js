@@ -1,69 +1,34 @@
 (function(){
 
-    // Controls event on window load
-    // window.addEventListener("load", function() {
-    //     screenStart.style.display = "inherit";
-    // }, false);
-
-    // startGameButton.addEventListener("click", function() {
-    //      screenStart.style.display = "none";
-    //      gameBoard.style.display = "inherit";
-    // }, false);
-
-    // Screen elements
-    const gameBoard = document.querySelector("#board");
-    const screenStart = document.querySelector("#start");
-    const screenWin = document.querySelector("#finish");
-
-    // Visibility of each screen
-    // gameBoard.style.display = "none";
-    screenStart.style.display = "none";
-    screenWin.style.display = "none";
-
-    //Buttons
-    const newGameButton = document.querySelector("#finish a");
-    const startGameButton = document.querySelector("#start a");
-
-
-    const $p1 = $("#player1");
-    const $p2 = $("#player2");
-    const playerOne = "one";
-    const playerTwo = "two";
-    const winPattern = [     
-        [0, 1, 2], [0, 3, 6], 
-        [3, 4, 5], [1, 4, 7],
-        [6, 7, 8], [2, 5, 8],
-        [0, 4, 8], [6, 4, 2]
-    ];
-
-    var player = 1;                     // Declares who goes first
-    $p1.addClass("active");
-
-    var activeBoard = [ 
-        "", "", "",
-        "", "", "",
-        "", "", "" 
-    ];
-
-    // Controls tic-tac-toe board events
-    startGame(player);
     function startGame(activePlayer) {
-        createListener(gameBoard, "click", toggleTurn);
-        //Controls events when new game is clicked
-        newGameButton.addEventListener("click", newGame, false);
-        addBoxListeners();
+        // createListener(window, "load", show(startScreen));
+        // createListener(startGameButton, "click", hide(startScreen));
+        createListener(gameBoard, "click", toggleTurn);                 // Add click event to game board (#board)
+        createListener(newGameButton, "click", newGame);                // Add click event to new game button
+        addBoxListeners(boxes);
     }
 
+    function show(element) {
+        element.style.display = "inherit";
+    }
+    function hide(element) {
+        element.style.display = "none";
+    }
+
+    // Creates event listeners
     function createListener(element, eventType, func) {
         element.addEventListener(eventType, func, false);
     }
-    function addBoxListeners() {
-        const boxes = document.querySelectorAll(".box");
+
+    function addBoxListeners(boxes) {
+        debugger
+        // console.log(boxes);
         boxes.forEach( function(box, index, arr) {
-            box.addEventListener("mouseover", showToken, false);
-            box.addEventListener("mouseout", hideToken, false);
+            createListener(box, "mouseover", showToken);
+            createListener(box, "mouseout", hideToken);
         })
     }
+
     // --------------------------------------------------------------
     // REMOVE LISTENER FROM FILLED BOXES
     // --------------------------------------------------------------
@@ -79,8 +44,8 @@
         var symbol;
         if (player === 1) symbol = "o";
         if (player === 2) symbol = "x";
-        console.log(player);
-        console.log(hoverTarget);
+        // console.log(player);
+        // console.log(hoverTarget);
         hoverTarget.style.backgroundImage = "url(img/" + symbol + ".svg)";
     }
 
@@ -162,10 +127,9 @@
     // END OF GAME FUNCTION
     // --------------------------------------------------------------
     function endOfGame(winner) {
-        var screenContent;
-
-        $(screenWin).removeClass("screen-win-one screen-win-two");
-        $(screenWin).addClass("screen-win-" + winner.player);
+        var screenContent = "";
+        $(winScreen).removeClass("screen-win-one screen-win-two");
+        $(winScreen).addClass("screen-win-" + winner.player);
         
         //"screen-win-one", "screen-win-two", "screen-win-tie"
         if (winner.player === "one" || winner.player === "two") {
@@ -175,38 +139,64 @@
         }
         $(".message").text(screenContent);
 
-        gameBoard.style.display = "none";
-        screenWin.style.display = "inherit";
-    }
-
-    // --------------------------------------------------------------
-    // RESET BOARD FUNCTION
-    // --------------------------------------------------------------
-    function resetBoard() {
-        var $box = $(".box");
-        // Reset the player back to "1"
-        player = 1;
-        $p1.addClass("players-turn active");
-        $p2.removeClass("players-turn active");
-        activeBoard = [ "", "", "", "", "", "", "", "", "" ];
-
-        $box.each(function() {
-            if ($box.hasClass("box-filled-1") || $box.hasClass("box-filled-2")) {
-                $box.removeClass("box-filled-1");
-                $box.removeClass("box-filled-2");
-            }
-        })
-        $(".box").css("background-image", "");
-        addBoxListeners();
+        show(winScreen);
+        hide(gameBoard);
     }
 
     // --------------------------------------------------------------
     // NEW GAME FUNCTION
     // --------------------------------------------------------------
     function newGame() {
-        resetBoard();
-        screenWin.style.display = "none";
-        gameBoard.style.display = "inherit";
+        player = 1;    // Reset the player back to "1"
+        $p1.addClass("players-turn active");
+        $p2.removeClass("players-turn active");
+        addBoxListeners(boxes);
+
+        var $box = $(".box");
+        $box.each(function() {
+            if ($box.hasClass("box-filled-1") || $box.hasClass("box-filled-2")) {
+                $box.removeClass("box-filled-1 box-filled-2");
+            }
+        })
+
+        activeBoard = [ "", "", "", "", "", "", "", "", "" ];
+        $box.css("background-image", "");
+        hide(winScreen);
+        show(gameBoard);
     }
 
+
+    // Screen elements
+    const startScreen = document.querySelector("#start");
+    const gameBoard = document.querySelector("#board");
+    const boxes = document.querySelectorAll(".box");
+    const winScreen = document.querySelector("#finish");
+
+    //Buttons
+    const newGameButton = document.querySelector("#finish a");
+    const startGameButton = document.querySelector("#start a");
+
+    // Visibility of each screen
+    show(gameBoard);
+    hide(startScreen);
+    hide(winScreen);
+
+    const $p1 = $("#player1");
+    const $p2 = $("#player2");
+    const playerOne = "one";
+    const playerTwo = "two";
+    const winPattern = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [6, 4, 2]
+    ];
+
+    var player = 1;                                                     // Declares who goes first
+    $p1.addClass("active");
+    var activeBoard = [ 
+        "", "", "",
+        "", "", "",
+        "", "", "" 
+    ];
+
+    // Controls tic-tac-toe board events
+    startGame(player);
 }());
