@@ -16,7 +16,7 @@
     function removeListener(element, eventType, func) {
         element.removeEventListener(eventType, func, false);
     }
-    function addBoxListeners(boxes) {
+    function boxEventListeners(boxes) {
         boxes.forEach( function(box, index, arr) {
             createListener(box, "click", playersTurn);
             createListener(box, "mouseover", showToken);
@@ -44,43 +44,6 @@
         hoverTarget.style.backgroundImage = "url(img/" + symbol + ".svg)";
     }
 
-    
-    // --------------------------------------------------------------
-    // TURN FUNCTION
-    // --------------------------------------------------------------
-    function playersTurn(box) {
-        console.log(box.target);
-        const clickedBox = box.target;
-        const boxPos = clickedBox.getAttribute("data-pos");
-        var winner;
-
-        removeListener(clickedBox, "click", playersTurn);
-        removeListener(clickedBox, "mouseover", showToken);
-        removeListener(clickedBox, "mouseout", hideToken);
-        // if (player === 1) {                         // Player "O"
-            
-
-            activeBoard[boxPos] = playerOne;
-            $(clickedBox).addClass("box-filled-1");
-
-            checkForWinner(activeBoard, playerOne);
-            $p1.removeClass("players-turn active");
-            $p2.addClass("players-turn active");
-            player += 1;
-        // } else if (player === 2) {
-            activateAiPlayer();                 // Player "X"
-            var AiPos = findAvailableBox()[0]
-            activeBoard[AiPos] = playerTwo;
-            checkForWinner(activeBoard, playerTwo);
-
-            // activeBoard[boxPos] = playerTwo;
-            // $clickedBox.addClass("box-filled-2");
-
-            player -= 1;
-        // }
-    }
-
-
     // --------------------------------------------------------------
     // COMPUTER PLAYER "AI" FUNCTION
     // --------------------------------------------------------------    
@@ -95,9 +58,6 @@
         setTimeout(function() {
             $(box).addClass("box-filled-2");
         }, 1000);
-        removeListener(box, "click", playersTurn);
-        removeListener(box, "mouseover", showToken);
-        removeListener(box, "mouseout", hideToken);
     }
 
     function findAvailableBox() {
@@ -169,28 +129,8 @@
         setTimeout(function() {
             hide(gameBoard); 
             show(winScreen); 
-        }, 1000);
+        }, 250);
         
-    }
-
-    // --------------------------------------------------------------
-    // NEW GAME FUNCTION
-    // --------------------------------------------------------------
-    function newGame() {
-        player = 1;    // Reset the player back to "1"
-        $p1.addClass("players-turn active");
-        $p2.removeClass("players-turn active");
-        addBoxListeners(boxes);
-
-        var $box = $(".box");
-        $box.each(function() {
-            $box.removeClass("box-filled-1 box-filled-2");
-        })
-
-        activeBoard = [ "", "", "", "", "", "", "", "", "" ];
-        $box.css("background-image", "");
-        hide(winScreen);
-        show(gameBoard);
     }
 
     // Screen elements
@@ -208,7 +148,9 @@
     const playerOne = "one";
     const playerTwo = "two";
     const winPattern = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [6, 4, 2]
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], 
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], 
+        [0, 4, 8], [6, 4, 2]
     ];
 
     // Visibility of each screen
@@ -216,23 +158,74 @@
     show(startScreen);
     hide(winScreen);
 
-    var player = 1;                                                     // Declares who goes first
-    $p1.addClass("active");
-    var activeBoard = [ 
-        "", "", "",
-        "", "", "",
-        "", "", "" 
-    ];
+    var activeBoard;
+    var player;
+    
 
     function startGame() {
+        player = 1;                                 // Declares who goes first
+        activeBoard = [ "", "", "", "", "", "", "", "", "" ];
+        $p1.addClass("players-turn active");
+        $p2.removeClass("players-turn active");
+        
+        // boxEventListeners(boxes);
+        boxes.forEach( function(box, index, arr) {
+            createListener(box, "click", playersTurn);
+            createListener(box, "mouseover", showToken);
+            createListener(box, "mouseout", hideToken);
+        })
+
+        var $box = $(".box");
+        $box.each(function() { 
+            $box.removeClass("box-filled-1 box-filled-2"); 
+            $box.css("background-image", "");
+        })
+
+        hide(winScreen);
         show(gameBoard);
         hide(startScreen);
     }
 
+    // --------------------------------------------------------------
+    // TURN FUNCTION
+    // --------------------------------------------------------------
+    function playersTurn(box) {
+        console.log(box.target);
+        const clickedBox = box.target;
+        const boxPos = clickedBox.getAttribute("data-pos");
+        var winner;
+
+        // Player "O"
+        activeBoard[boxPos] = playerOne;
+        $(clickedBox).addClass("box-filled-1");
+
+        checkForWinner(activeBoard, playerOne);
+        $p1.removeClass("players-turn active");
+        $p2.addClass("players-turn active");
+    }
+
+
     // createListener(window, "load", show(startScreen));
     createListener(startGameButton, "click", startGame);
+
+    if (player === 1) {
+
+        player += 1;
+    } else if (player === 2) {
+        boxes.forEach( function(box, index, arr) {
+            removeListener(box, "click", playersTurn);
+            removeListener(box, "mouseover", showToken);
+            removeListener(box, "mouseout", hideToken);
+        })
+        activateAiPlayer();                 // Player "X"
+        var AiPos = findAvailableBox()[0]
+        activeBoard[AiPos] = playerTwo;
+        checkForWinner(activeBoard, playerTwo);
+        player -= 1;
+    }
+
     // createListener(gameBoard, "click", toggleTurn);                 // Add click event to game board (#board)
-    createListener(newGameButton, "click", newGame);                // Add click event to new game button
-    addBoxListeners(boxes);
+    createListener(newGameButton, "click", startGame);                // Add click event to new game button
+    
 
 }());
