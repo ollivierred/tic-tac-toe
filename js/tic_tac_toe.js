@@ -1,4 +1,4 @@
-(function(){
+(function() {
     // --------------------------------------------------------------
     // HELPER FUNCTIONS
     // --------------------------------------------------------------
@@ -37,31 +37,24 @@
     function showToken(box)  {
         const hoverTarget = box.target;
         var symbol;
-        if (player === 1) symbol = "o";
-        if (player === 2) symbol = "x";
         // console.log(player);
         // console.log(hoverTarget);
+        if (player === 1) symbol = "o";
+        if (player === 2) symbol = "x";
         hoverTarget.style.backgroundImage = "url(img/" + symbol + ".svg)";
     }
 
     // --------------------------------------------------------------
     // COMPUTER PLAYER "AI" FUNCTION
-    // --------------------------------------------------------------    
-    function activateAiPlayer() {
-        console.log(findAvailableBox()[0]);
-        placeAiToken(); 
-    }
-
-    function placeAiToken(availableBox) {
-        var boxIndex = findAvailableBox()[0];
-        var box = boxes[boxIndex];
-        setTimeout(function() {
-            $(box).addClass("box-filled-2");
-        }, 1000);
+    // --------------------------------------------------------------
+    function openSpots(availableBox) {
+        var boxIndex = findAvailableBox()[0]
+        console.log(boxes[boxIndex]);
+        
+        return boxes[boxIndex];
     }
 
     function findAvailableBox() {
-        debugger
         var availableBoxes = [];
         activeBoard.filter(function(value, index, arr) {
             if (value === "") availableBoxes.push(index);
@@ -75,7 +68,6 @@
     // --------------------------------------------------------------
     function checkForWinner(board, currentPlayer) {
         var filled = isBoardFilled(board);
-        var winner = null;
         var playerPattern = [];
 
         board.forEach(function(boardToken, index, arr) {
@@ -83,13 +75,12 @@
                 playerPattern.push(index);
             } 
         })
-
-        winPattern.forEach(function(thisPattern, index, array) {
-            if(thisPattern.every(element => playerPattern.indexOf(element) > -1)) {
-                console.log("You won player " + currentPlayer);
-                winner = {player: currentPlayer};
-            }
-        })
+            winPattern.forEach(function(thisPattern, index, array) {
+                if(thisPattern.every(element => playerPattern.indexOf(element) > -1)) {
+                    console.log("You won player " + currentPlayer);
+                    winner = {player: currentPlayer};
+                }
+            })
 
         if (filled && winner === null) {
             winner = {player: "tie"};
@@ -126,6 +117,7 @@
         }
         $(".message").text(screenContent);
 
+        createListener(newGameButton, "click", startGame);                // Add click event to new game button
         setTimeout(function() {
             hide(gameBoard); 
             show(winScreen); 
@@ -133,6 +125,32 @@
         
     }
 
+    function startGame() {
+        activeBoard = [ "", "", "", "", "", "", "", "", "" ];
+        player = 1;       // Declares who goes first
+        winner = null;
+        
+        $p1.addClass("players-turn active");
+        $p2.removeClass("players-turn active");
+        
+        // boxEventListeners(boxes);
+        boxes.forEach( function(box, index, arr) {
+            $(box).removeClass("box-filled-1 box-filled-2");
+            $(box).css("background-image", "");
+            createListener(box, "click", playersTurn);
+            createListener(box, "mouseover", showToken);
+            createListener(box, "mouseout", hideToken);
+        })
+
+        hide(startScreen);
+        hide(winScreen);
+        show(gameBoard);
+    }
+
+
+    // --------------------------------------------------------------
+    // GLOBAL VARIABLES
+    // --------------------------------------------------------------
     // Screen elements
     const startScreen = document.querySelector("#start");
     const gameBoard = document.querySelector("#board");
@@ -152,80 +170,52 @@
         [0, 3, 6], [1, 4, 7], [2, 5, 8], 
         [0, 4, 8], [6, 4, 2]
     ];
+    var activeBoard = [ "", "", "", "", "", "", "", "", "" ];
+    var player;
+    var winner;
 
     // Visibility of each screen
     hide(gameBoard);
     show(startScreen);
     hide(winScreen);
 
-    var activeBoard;
-    var player;
-    
-
-    function startGame() {
-        player = 1;                                 // Declares who goes first
-        activeBoard = [ "", "", "", "", "", "", "", "", "" ];
-        $p1.addClass("players-turn active");
-        $p2.removeClass("players-turn active");
-        
-        // boxEventListeners(boxes);
-        boxes.forEach( function(box, index, arr) {
-            createListener(box, "click", playersTurn);
-            createListener(box, "mouseover", showToken);
-            createListener(box, "mouseout", hideToken);
-        })
-
-        var $box = $(".box");
-        $box.each(function() { 
-            $box.removeClass("box-filled-1 box-filled-2"); 
-            $box.css("background-image", "");
-        })
-
-        hide(winScreen);
-        show(gameBoard);
-        hide(startScreen);
-    }
-
-    // --------------------------------------------------------------
-    // TURN FUNCTION
-    // --------------------------------------------------------------
-    function playersTurn(box) {
-        console.log(box.target);
-        const clickedBox = box.target;
-        const boxPos = clickedBox.getAttribute("data-pos");
-        var winner;
-
-        // Player "O"
-        activeBoard[boxPos] = playerOne;
-        $(clickedBox).addClass("box-filled-1");
-
-        checkForWinner(activeBoard, playerOne);
-        $p1.removeClass("players-turn active");
-        $p2.addClass("players-turn active");
-    }
-
 
     // createListener(window, "load", show(startScreen));
     createListener(startGameButton, "click", startGame);
 
-    if (player === 1) {
-
-        player += 1;
-    } else if (player === 2) {
-        boxes.forEach( function(box, index, arr) {
-            removeListener(box, "click", playersTurn);
-            removeListener(box, "mouseover", showToken);
-            removeListener(box, "mouseout", hideToken);
-        })
-        activateAiPlayer();                 // Player "X"
-        var AiPos = findAvailableBox()[0]
-        activeBoard[AiPos] = playerTwo;
-        checkForWinner(activeBoard, playerTwo);
-        player -= 1;
+    // --------------------------------------------------------------
+    // PLAYER'S TURN FUNCTION
+    // --------------------------------------------------------------
+    function playersTurn(box) {
+        console.log(box.target);
+        turn(box.target, playerOne);
+        if (winner === null) {
+            turn(openSpots(), playerTwo);                 // Player "X" / computer
+        }
     }
+        function turn(box, currentPlayer) {
+            const selectedBox = box;
+            const boxPos = box.getAttribute("data-pos");
+            
+            // Player "O" || Player "X"
+            activeBoard[boxPos] = currentPlayer;
+            removeListener(selectedBox, "click", playersTurn);
+            removeListener(selectedBox, "mouseover", showToken);
+            removeListener(selectedBox, "mouseout", hideToken);
+            
+            checkForWinner(activeBoard, currentPlayer);
 
-    // createListener(gameBoard, "click", toggleTurn);                 // Add click event to game board (#board)
-    createListener(newGameButton, "click", startGame);                // Add click event to new game button
-    
-
+            if (currentPlayer === "one") {
+                $p1.removeClass("players-turn active");
+                $p2.addClass("players-turn active");
+                $(selectedBox).addClass("box-filled-1");
+                player +=1;
+            }
+            if (currentPlayer === "two") {
+                $p2.removeClass("players-turn active");
+                $p1.addClass("players-turn active");
+                $(selectedBox).addClass("box-filled-2");
+                player -=1;
+            }
+        }
 }());
