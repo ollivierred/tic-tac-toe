@@ -160,7 +160,11 @@
 
     const $p1 = $("#player1");
     const $p2 = $("#player2");
+
+    // Player "O"
     const playerOne = "one";
+
+    // Player "X"
     const playerTwo = "two";
     const winPattern = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8], 
@@ -191,7 +195,7 @@
         console.log(box.target);
         turn(box.target, playerOne);
         if (winner === null) {
-            turn(determineBestMove().index, playerTwo);                 // Player "X" / computer
+            turn(determineBestMove(), playerTwo);                 // Player "X" / computer
         }
     }
         function turn(box, currentPlayer) {
@@ -267,30 +271,59 @@
         return winner;
     }
 
-    
-    minMax(originalBoard, playerTwo);
 
     function minMax(newBoard, player) {
         var availSpots = findAvailableSpots(newBoard);
+        var moves = [];
 
         if (checkForWin(newBoard, playerOne)) {
             return {score: -10};
         } else if(checkForWin(newBoard, player)) {
             return {score: 10};
-        } else if(checkForWin(newBoard, player)) {
+        } else if(availSpots.length === 0) {
             return {score: 0};
         }
-
-        var moves = [];
+        
         availSpots.forEach(function(value) {
             var move = {};
-            move.index = newBoard[availSpots[value]];
-            newBoard[availSpots[value]] = player;
-        }) 
+            move.index = newBoard[value];
+            newBoard[value] = player;
+
+            if (player === playerOne) {
+                var result = minMax(newBoard, playerOne);
+                move.score = result.score;
+            } else {
+                var result = minMax(newBoard, playerTwo);
+                move.score = result.score;
+            }
+    
+            newBoard[value] = move.index;
+            moves.push(move);
+        })
+
+        var bestMove;
+        if (player === playerTwo) {
+            var bestScore = -10000;
+            moves.forEach(function(value, index) {
+                if(moves[value].score > bestScore) {
+                    bestScore = moves[value].score;
+                    bestMove = value;
+                }
+            })
+        } else {
+            var bestScore = 10000;
+            moves.forEach(function(value, index) {
+                if(moves[value].score > bestScore) {
+                    bestScore = moves[value].score;
+                    bestMove = value;
+                }
+            })
+        }
 
         console.log("Empty spaces " + availSpots);
         console.log(move.index);
         console.log(newBoard[availSpots[value]]);
+        return moves[bestMove];
     }
 
 }());
