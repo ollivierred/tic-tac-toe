@@ -22,10 +22,18 @@
         },
 
         createMultipleListeners: function(elementList) {
-            elementList.forEach( function(element, index, arr) {
+            elementList.forEach(function(element, index, arr) {
                 createListener(element, "click", playersTurn);
                 createListener(element, "mouseover", showToken);
                 createListener(element, "mouseout", hideToken);
+            })
+        },
+
+        fillBox: function(board, token, player) {
+            board.forEach(function(box, index) {
+                if (box === token) {
+                    $(boxes[index]).addClass("box-filled-" + player);
+                }
             })
         }
     }    
@@ -53,52 +61,20 @@
     // --------------------------------------------------------------
     // COMPUTER PLAYER "AI" FUNCTION
     // --------------------------------------------------------------
-    function openSpots(availableBox) {
-        var boxIndex = findAvailableBox()[0]
+    function determineBestMove(availSpots) {
+        // var boxIndex = minMax(originalBoard);
+        var boxIndex = findAvailableSpots(originalBoard)[0];
         console.log(boxes[boxIndex]);
         
         return boxes[boxIndex];
     }
-
-    function findAvailableBox() {
-        var availableBoxes = [];
-        activeBoard.filter(function(value, index, arr) {
-            if (value === "") availableBoxes.push(index);
+    function findAvailableSpots(board) {
+        var availSpots = [];
+        board.filter(function(value, index, arr) {
+            if (value !== "one" && value !== "two") availSpots.push(index);
         });
-        return availableBoxes;
+        return availSpots;
     }
-
-
-    // --------------------------------------------------------------
-    // CHECK FOR WINNER FUNCTION
-    // --------------------------------------------------------------
-    function checkForWinner(board, currentPlayer) {
-        var filled = isBoardFilled(board);
-        var playerPattern = [];
-
-        board.forEach(function(boardToken, index, arr) {
-            if (boardToken === currentPlayer) {
-                playerPattern.push(index);
-            } 
-        })
-            winPattern.forEach(function(thisPattern, index, array) {
-                if(thisPattern.every(element => playerPattern.indexOf(element) > -1)) {
-                    console.log("You won player " + currentPlayer);
-                    winner = {player: currentPlayer};
-                }
-            })
-
-        if (filled && winner === null) {
-            winner = {player: "tie"};
-            endOfGame(winner);
-        } else if (winner) {
-            endOfGame(winner);
-        }
-    }
-
-    // --------------------------------------------------------------
-    // IS BOARD FILLED FUNCTION
-    // --------------------------------------------------------------
     function isBoardFilled(activeBoard) {
         var filled = false;
         if (activeBoard.every(slot => slot !== "")) {
@@ -132,7 +108,8 @@
     }
 
     function startGame() {
-        activeBoard = [ "", "", "", "", "", "", "", "", "" ];
+        // originalBoard = [ "", "", "", "", "", "", "", "", "" ];
+        originalBoard = [ "one", 1, "two", "two", 4, "two", 6, "one", "one" ];
         player = 1;       // Declares who goes first
         winner = null;
         
@@ -140,13 +117,27 @@
         $p2.removeClass("players-turn active");
         
         // boxEventListeners(boxes);
-        boxes.forEach( function(box, index, arr) {
+        boxes.forEach(function(box, index, arr) {
             $(box).removeClass("box-filled-1 box-filled-2");
             $(box).css("background-image", "");
             helper.createListener(box, "click", playersTurn);
             helper.createListener(box, "mouseover", showToken);
             helper.createListener(box, "mouseout", hideToken);
         })
+
+        originalBoard.forEach(function(value) {
+            if (value === "one") {
+                helper.fillBox(originalBoard, "one", 1);
+                player +=1;
+            }
+            if (value === "two") {
+                helper.fillBox(originalBoard, "two", 2);
+                player -=1;
+            }
+        })
+
+        console.log(player);
+        console.log(findAvailableSpots(originalBoard));
 
         helper.hide(startScreen);
         helper.hide(winScreen);
@@ -176,7 +167,7 @@
         [0, 3, 6], [1, 4, 7], [2, 5, 8], 
         [0, 4, 8], [6, 4, 2]
     ];
-    var activeBoard = [ "", "", "", "", "", "", "", "", "" ];
+    var originalBoard = [ "", "", "", "", "", "", "", "", "" ];
     var player;
     var winner;
 
@@ -189,6 +180,10 @@
     // createListener(window, "load", show(startScreen));
     helper.createListener(startGameButton, "click", startGame);
 
+
+
+
+
     // --------------------------------------------------------------
     // PLAYER'S TURN FUNCTION
     // --------------------------------------------------------------
@@ -196,33 +191,106 @@
         console.log(box.target);
         turn(box.target, playerOne);
         if (winner === null) {
-            turn(openSpots(), playerTwo);                 // Player "X" / computer
+            turn(determineBestMove().index, playerTwo);                 // Player "X" / computer
         }
     }
         function turn(box, currentPlayer) {
             const selectedBox = box;
-            const boxPos = box.getAttribute("data-pos");
+            const selectedBoxIndex = box.getAttribute("data-pos");
             
             // Player "O" || Player "X"
-            activeBoard[boxPos] = currentPlayer;
+            originalBoard[selectedBoxIndex] = currentPlayer;
 
             helper.removeListener(selectedBox, "click", playersTurn);
             helper.removeListener(selectedBox, "mouseover", showToken);
             helper.removeListener(selectedBox, "mouseout", hideToken);
             
-            checkForWinner(activeBoard, currentPlayer);
+            checkForWinner(originalBoard, currentPlayer);
 
             if (currentPlayer === "one") {
                 $p1.removeClass("players-turn active");
                 $p2.addClass("players-turn active");
-                $(selectedBox).addClass("box-filled-1");
+                helper.fillBox(originalBoard, "one", 1);
                 player +=1;
             }
             if (currentPlayer === "two") {
                 $p2.removeClass("players-turn active");
                 $p1.addClass("players-turn active");
-                $(selectedBox).addClass("box-filled-2");
+                helper.fillBox(originalBoard, "two", 2);
                 player -=1;
             }
         }
+
+    // --------------------------------------------------------------
+    // CHECK FOR WINNER FUNCTION
+    // --------------------------------------------------------------
+    function checkForWinner(board, currentPlayer) {
+        var filled = isBoardFilled(board);
+        var playerPattern = [];
+
+        board.forEach(function(boardToken, index, arr) {
+            if (boardToken === currentPlayer) {
+                playerPattern.push(index);
+            } 
+        })
+            winPattern.forEach(function(thisPattern, index, array) {
+                if(thisPattern.every(element => playerPattern.indexOf(element) > -1)) {
+                    console.log("You won player " + currentPlayer);
+                    winner = {player: currentPlayer};
+                }
+            })
+
+        if (filled && winner === null) {
+            winner = {player: "tie"};
+            endOfGame(winner);
+        } else if (winner) {
+            endOfGame(winner);
+        }
+    }
+
+    function checkForWin(board, currentPlayer) {
+        var filled = findAvailableSpots(board).length === 0;
+        var playerPattern = [];
+        var winner = false;
+
+        board.forEach(function(boardToken, index, arr) {
+            if (boardToken === currentPlayer) {
+                playerPattern.push(index);
+            } 
+        })
+            winPattern.forEach(function(thisPattern, index, array) {
+                if(thisPattern.every(element => playerPattern.indexOf(element) > -1)) {
+                    console.log("You won player " + currentPlayer);
+                    winner = true;
+                }
+            })
+        return winner;
+    }
+
+    
+    minMax(originalBoard, playerTwo);
+
+    function minMax(newBoard, player) {
+        var availSpots = findAvailableSpots(newBoard);
+
+        if (checkForWin(newBoard, playerOne)) {
+            return {score: -10};
+        } else if(checkForWin(newBoard, player)) {
+            return {score: 10};
+        } else if(checkForWin(newBoard, player)) {
+            return {score: 0};
+        }
+
+        var moves = [];
+        availSpots.forEach(function(value) {
+            var move = {};
+            move.index = newBoard[availSpots[value]];
+            newBoard[availSpots[value]] = player;
+        }) 
+
+        console.log("Empty spaces " + availSpots);
+        console.log(move.index);
+        console.log(newBoard[availSpots[value]]);
+    }
+
 }());
