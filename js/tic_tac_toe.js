@@ -2,27 +2,33 @@
     // --------------------------------------------------------------
     // HELPER FUNCTIONS
     // --------------------------------------------------------------
-    function show(element) {
-        element.style.display = "inherit";
-    }
-    function hide(element) {
-        element.style.display = "none";
-    }
-    // Creates event listeners
-    function createListener(element, eventType, func) {
-        element.addEventListener(eventType, func, false);
-    }
-    // Creates event listeners
-    function removeListener(element, eventType, func) {
-        element.removeEventListener(eventType, func, false);
-    }
-    function boxEventListeners(boxes) {
-        boxes.forEach( function(box, index, arr) {
-            createListener(box, "click", playersTurn);
-            createListener(box, "mouseover", showToken);
-            createListener(box, "mouseout", hideToken);
-        })
-    }
+    var helper = {
+        show: function(element) {
+            element.style.display = "inherit";
+        },
+
+        hide: function(element) {
+            element.style.display = "none";
+        },
+
+        // Creates event listeners
+        createListener: function(element, eventType, func) {
+            element.addEventListener(eventType, func, false);
+        },
+
+        // Creates event listeners
+        removeListener: function(element, eventType, func) {
+            element.removeEventListener(eventType, func, false);
+        },
+
+        createMultipleListeners: function(elementList) {
+            elementList.forEach( function(element, index, arr) {
+                createListener(element, "click", playersTurn);
+                createListener(element, "mouseover", showToken);
+                createListener(element, "mouseout", hideToken);
+            })
+        }
+    }    
 
     // --------------------------------------------------------------
     // REMOVE LISTENER FROM FILLED BOXES
@@ -117,10 +123,10 @@
         }
         $(".message").text(screenContent);
 
-        createListener(newGameButton, "click", startGame);                // Add click event to new game button
+        helper.createListener(newGameButton, "click", startGame);                // Add click event to new game button
         setTimeout(function() {
-            hide(gameBoard); 
-            show(winScreen); 
+            helper.hide(gameBoard); 
+            helper.show(winScreen); 
         }, 250);
         
     }
@@ -137,14 +143,14 @@
         boxes.forEach( function(box, index, arr) {
             $(box).removeClass("box-filled-1 box-filled-2");
             $(box).css("background-image", "");
-            createListener(box, "click", playersTurn);
-            createListener(box, "mouseover", showToken);
-            createListener(box, "mouseout", hideToken);
+            helper.createListener(box, "click", playersTurn);
+            helper.createListener(box, "mouseover", showToken);
+            helper.createListener(box, "mouseout", hideToken);
         })
 
-        hide(startScreen);
-        hide(winScreen);
-        show(gameBoard);
+        helper.hide(startScreen);
+        helper.hide(winScreen);
+        helper.show(gameBoard);
     }
 
 
@@ -175,13 +181,13 @@
     var winner;
 
     // Visibility of each screen
-    hide(gameBoard);
-    show(startScreen);
-    hide(winScreen);
+    helper.hide(gameBoard);
+    helper.show(startScreen);
+    helper.hide(winScreen);
 
 
     // createListener(window, "load", show(startScreen));
-    createListener(startGameButton, "click", startGame);
+    helper.createListener(startGameButton, "click", startGame);
 
     // --------------------------------------------------------------
     // PLAYER'S TURN FUNCTION
@@ -199,9 +205,10 @@
             
             // Player "O" || Player "X"
             activeBoard[boxPos] = currentPlayer;
-            removeListener(selectedBox, "click", playersTurn);
-            removeListener(selectedBox, "mouseover", showToken);
-            removeListener(selectedBox, "mouseout", hideToken);
+
+            helper.removeListener(selectedBox, "click", playersTurn);
+            helper.removeListener(selectedBox, "mouseover", showToken);
+            helper.removeListener(selectedBox, "mouseout", hideToken);
             
             checkForWinner(activeBoard, currentPlayer);
 
