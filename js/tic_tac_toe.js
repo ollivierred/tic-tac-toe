@@ -43,26 +43,24 @@ var ticTacToe = (function() {
         hideElement: function(element) {
             element.style.display = "none";
         },
-
         loadBoard: function() {
             boardArr = [ 
                 "E", "E", "E", "E", 
                 "E", "E", "E", "E", "E" ];
             gameState = {
                 win: false, tie: false, winner: undefined };
+                turnCount = 1;
 
             this.boardSquares.forEach(function(square) {
                 $(square).removeClass("box-filled-1 box-filled-2");
                 $(square).css("background-image", "");
             })
-            
-            console.log(boardArr);
+
             this.setActiveState();
             this.hideElement(this.startScreen);
             this.hideElement(this.winScreen);
             this.showElement(this.boardContainer);
         },
-
 
         playersMove: function(element) {                
             var square = element.target;
@@ -70,16 +68,28 @@ var ticTacToe = (function() {
                 $(square).hasClass("box-filled-2")) {
                 return;
             } else {
+
                 this.placeToken(element.target, this.boardSquares, playersToken, boardArr);
-                this.checkGameState();
-                if (gameState.win) {
-                    this.renderWinScreen();
-                    return;
-                }
-                this.toggleActiveState();
+                this.toggleTurnState();
                 this.setActiveState();
+
+                if (gameState.win || gameState.tie) {
+                    return;
+                } else {
+                    this.placeToken(this.AiPlayersMove(), this.boardSquares, playersToken, boardArr);
+                    this.toggleTurnState();
+                    this.setActiveState();
+                } 
             }
         },
+        AiPlayersMove: function() {
+            var index = this.emptySpots(boardArr)[0]; 
+        //     var index = minMax(boardArr, playersToken).index;
+            var square = this.boardSquares[index];
+            return square;
+        },
+
+
         placeToken: function(element, elementList, player, arr) {
             const selectedSquare = element;
             const selectedSquareIndex = element.getAttribute("data-pos");
@@ -92,21 +102,29 @@ var ticTacToe = (function() {
                     if (player === "two") $(elementList[index]).addClass("box-filled-2");
                 }
             })
+
+            this.checkGameState();
+            if (gameState.win || gameState.tie) {
+                this.renderWinScreen();
+                return;
+            }
         },
+
+
         setActiveState: function() {
             if (turnCount === 1) {
-                this.$indicatorForP1.addClass("players-turn active");
-                this.$indicatorForP2.removeClass("players-turn active");
+                this.$indicatorForP1.addClass("active");
+                this.$indicatorForP2.removeClass("active");
                 playersToken = "one";
             }
             if (turnCount === 2) {
-                this.$indicatorForP2.addClass("players-turn active");
-                this.$indicatorForP1.removeClass("players-turn active");
+                this.$indicatorForP2.addClass("active");
+                this.$indicatorForP1.removeClass("active");
                 playersToken = "two";
             }
             
         },
-        toggleActiveState: function() {
+        toggleTurnState: function() {
             if (turnCount === 1) {
                 turnCount += 1;
                 playersToken = "two";
@@ -142,9 +160,8 @@ var ticTacToe = (function() {
 
 
         checkGameState: function() {
-            this.gameStateWin(arr, player);
-            this.gameStateTie(arr);
-
+            this.gameStateWin(boardArr, playersToken);
+            this.gameStateTie(boardArr);
         },
         gameStateWin: function(arr, player) {
             var playPattern = [];
@@ -162,85 +179,61 @@ var ticTacToe = (function() {
             })
             console.log(gameState);
         },
-        gameStateTie: function(arr) {
+        emptySpots: function(arr) {
             var availSpots = [];
-    //         arr.forEach(function(value, index) {
-    //             if (value === "E") {
-    //                 availSpots.push(index);
-    //             }
-    //         })
-
-    //         if (availSpots.length === 0) {
-                gameState.win = false; 
-                gameState.tie = false; 
-                gameState.winner = undefined;
-    //         } else {
-        return availSpots;
-    }
+            arr.forEach(function(value, index) {
+                if(value === "E") availSpots.push(index);
+            })
+            return availSpots;
+        },
+        gameStateTie: function(arr) {
+            var availSpots = this.emptySpots(boardArr);
+            if(availSpots.length === 0) { 
+                gameState.tie = true; 
+                gameState.winner = "tie";
+            }
         },
 
 
         setWinScreen: function(obj) {
             $(this.winScreen).removeClass("screen-win-one screen-win-two");
-            var screenMessage = "Winner";
-
+            var screenMessage = undefined;
             //"screen-win-one", "screen-win-two", "screen-win-tie"
-            // else if (winner.playerName === "tie") {
-            //     screenMessage = "Tie";
-            // }
-            $(this.winScreen).addClass("screen-win-" + obj.winner);
+            if (obj.win) {
+                screenMessage = "Winner";
+            } else if (obj.tie) {
+                screenMessage = "Tie";
+            }
             $(".message").text(screenMessage);
+            $(this.winScreen).addClass("screen-win-" + obj.winner);
         },
         renderWinScreen: function() {
             this.setWinScreen(gameState);
             this.hideElement(this.boardContainer);
             this.showElement(this.winScreen);
-        }
+        },
+
 
     };
 
     return myGame;
-
 })();
 
     ticTacToe.init();
 
-
-
-    //     findEmptySpots: function(board) {
-    //         var availSpots = [];
-    //         arr.filter(function(value, index) {
-    //             if (typeof(value) === "number") {
-    //                 availSpots.push(index);
-    //             }
-    //         });
-    //         return availSpots;
-    //     },
-    // // --------------------------------------------------------------
-    // // COMPUTER PLAYER "AI" RELATED FUNCTIONS
-    // // --------------------------------------------------------------
-
-
-
-    // function computerWillMove() {
-    //     // var boxIndex = computer.findEmptySpots(originalBoard)[0]; 
-    //     var boxIndex = minMax(originalBoard, playerTwo).index;
-    //     return boxes[boxIndex];
-    // }
-
-
+    
+    // --------------------------------------------------------------
+    // COMPUTER PLAYER "AI" RELATED FUNCTIONS
+    // --------------------------------------------------------------
 
     // function minMax(newBoard, player) {
-    //     debugger
-    //     var filled = computer.isBoardFilled(newBoard)
-    //     var gameOver = checkForWinner(newBoard, player).gameOver;
-    //     var winner = checkForWinner(newBoard, player).playerName;
+    //     this.checkGameState();
 
-    //     if(filled) return {score: 0};
-    //     if(gameOver && winner === "one") return {score: -10};
-    //     if(gameOver && winner === "two") return {score: 10};
+    //     if(gameState.tie) return {score: 0};
+    //     if(gameState.win && gameState.winner === "one") return {score: -10};
+    //     if(gameState.win && gameState.winner === "two") return {score: 10};
 
-    //     var availSpots = computer.findEmptySpots(newBoard);
+    //     var availSpots = this.emptySpots(newBoard);
     //     var moves = [];
 
     //     availSpots.forEach(function(value) {
@@ -255,16 +248,16 @@ var ticTacToe = (function() {
     //             var result = minMax(newBoard, playerTwo);
     //             move.score = result.score;
     //         }
-    
+
     //         newBoard[value] = move.index;
     //         moves.push(move);
     //     })
 
     //     var bestMove;
-    //     if (player === playerTwo) {
+    //     if (player === "two") {
     //         var bestScore = -10000;
     //         moves.forEach(function(value, index) {
-    //             if(moves[index].score > bestScore) {
+    //             if(moves[index].score < bestScore) {
     //                 bestScore = moves[index].score;
     //                 bestMove = index;
     //             }
@@ -278,6 +271,5 @@ var ticTacToe = (function() {
     //             }
     //         })
     //     }
-
     //     return moves[bestMove];
     // }
