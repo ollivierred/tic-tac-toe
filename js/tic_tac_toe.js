@@ -2,11 +2,8 @@ var ticTacToe = (function() {
 
     var playersToken = "one";       // Player "O" = "one" || Player "X" = "two"
     var turnCount = 1;
-    var gameState = {
-        gameOver: false, gameWinner: "" };
-    var boardArr = [ 
-        "E", "E", "E", "E", 
-        "E", "E", "E", "E", "E" ];
+    var gameState = {};
+    var boardArr = [];
     const winPattern = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], 
         [1, 4, 7], [2, 5, 8], [0, 4, 8], [6, 4, 2] ];
@@ -48,25 +45,37 @@ var ticTacToe = (function() {
         },
 
         loadBoard: function() {
+            boardArr = [ 
+                "E", "E", "E", "E", 
+                "E", "E", "E", "E", "E" ];
+            gameState = {
+                win: false, tie: false, winner: undefined };
+
             this.boardSquares.forEach(function(square) {
-                // console.log(square);
                 $(square).removeClass("box-filled-1 box-filled-2");
                 $(square).css("background-image", "");
             })
-
+            
+            console.log(boardArr);
             this.setActiveState();
             this.hideElement(this.startScreen);
             this.hideElement(this.winScreen);
             this.showElement(this.boardContainer);
         },
 
-        playersMove: function(element) {
+
+        playersMove: function(element) {                
             var square = element.target;
             if ($(square).hasClass("box-filled-1") ||
                 $(square).hasClass("box-filled-2")) {
                 return;
             } else {
                 this.placeToken(element.target, this.boardSquares, playersToken, boardArr);
+                this.checkGameState();
+                if (gameState.win) {
+                    this.renderWinScreen();
+                    return;
+                }
                 this.toggleActiveState();
                 this.setActiveState();
             }
@@ -107,6 +116,7 @@ var ticTacToe = (function() {
             }
         },
 
+
         hoverStateOn: function(element) {
             var square = element.target;
             if ($(square).hasClass("box-filled-1") ||
@@ -130,6 +140,63 @@ var ticTacToe = (function() {
             element.style.backgroundImage = "";            
         },
 
+
+        checkGameState: function() {
+            this.gameStateWin(arr, player);
+            this.gameStateTie(arr);
+
+        },
+        gameStateWin: function(arr, player) {
+            var playPattern = [];
+            arr.forEach(function(token, index) {
+                if (token === player) playPattern.push(index); 
+            })
+            console.log(arr);
+            console.log(playPattern);
+            winPattern.forEach(function(pattern, patternIndex) {
+                if(pattern.every(element => playPattern.indexOf(element) > -1)) {
+                    console.log("You won player " + player);
+                    gameState.win = true;
+                    gameState.winner = player;
+                }
+            })
+            console.log(gameState);
+        },
+        gameStateTie: function(arr) {
+            var availSpots = [];
+    //         arr.forEach(function(value, index) {
+    //             if (value === "E") {
+    //                 availSpots.push(index);
+    //             }
+    //         })
+
+    //         if (availSpots.length === 0) {
+                gameState.win = false; 
+                gameState.tie = false; 
+                gameState.winner = undefined;
+    //         } else {
+        return availSpots;
+    }
+        },
+
+
+        setWinScreen: function(obj) {
+            $(this.winScreen).removeClass("screen-win-one screen-win-two");
+            var screenMessage = "Winner";
+
+            //"screen-win-one", "screen-win-two", "screen-win-tie"
+            // else if (winner.playerName === "tie") {
+            //     screenMessage = "Tie";
+            // }
+            $(this.winScreen).addClass("screen-win-" + obj.winner);
+            $(".message").text(screenMessage);
+        },
+        renderWinScreen: function() {
+            this.setWinScreen(gameState);
+            this.hideElement(this.boardContainer);
+            this.showElement(this.winScreen);
+        }
+
     };
 
     return myGame;
@@ -140,94 +207,26 @@ var ticTacToe = (function() {
 
 
 
-    // var originalBoard = [ "", "", "", "", "", "", "", "", "" ];
-    // originalBoard = [ "one", 1, "two", "two", 4, "two", 6, "one", "one" ];
-
-    // // --------------------------------------------------------------
-    // // COMPUTER PLAYER "AI" RELATED FUNCTIONS
-    // // --------------------------------------------------------------
-    // var computer = {
     //     findEmptySpots: function(board) {
     //         var availSpots = [];
-    //         board.filter(function(value, index, arr) {
+    //         arr.filter(function(value, index) {
     //             if (typeof(value) === "number") {
     //                 availSpots.push(index);
     //             }
     //         });
     //         return availSpots;
     //     },
-
-    //     isBoardFilled: function(board) {
-    //         var availSpots = computer.findEmptySpots(board)
-    //         var filled = false;
-    //         if (availSpots.length === 0) {
-    //             filled = true;
-    //         }
-    //         return filled;
-    //     }
-
-    // }
-    
-
     // // --------------------------------------------------------------
-    // // END OF GAME FUNCTION
+    // // COMPUTER PLAYER "AI" RELATED FUNCTIONS
     // // --------------------------------------------------------------
-    // function endOfGame(winner) {
 
-    //     var screenContent = "";
-    //     $(winScreen).removeClass("screen-win-one screen-win-two");
-    //     $(winScreen).addClass("screen-win-" + winner.playerName);
-        
-    //     //"screen-win-one", "screen-win-two", "screen-win-tie"
-    //     if (winner.playerName === "one" || winner.playerName === "two") {
-    //         screenContent = "Winner";
-    //     } else if (winner.playerName === "tie") {
-    //         screenContent = "Tie";
-    //     }
-    //     $(".message").text(screenContent);
 
-    //     helper.createListener(newGameButton, "click", startGame);                // Add click event to new game button
-    //     setTimeout(function() {
-    //         helper.hide(gameBoard); 
-    //         helper.show(winScreen); 
-    //     }, 250);
-        
-    // }
 
     // function computerWillMove() {
     //     // var boxIndex = computer.findEmptySpots(originalBoard)[0]; 
     //     var boxIndex = minMax(originalBoard, playerTwo).index;
     //     return boxes[boxIndex];
     // }
-
-
-    // // --------------------------------------------------------------
-    // // CHECK FOR WINNER FUNCTION
-    // // --------------------------------------------------------------
-    // function checkForWinner(board, currentPlayer) {
-    //     var playerPattern = [];
-    //     var winner = {
-    //         gameOver: false,
-    //         playerName: ""
-    //     };
-
-    //     board.forEach(function(boardToken, index, arr) {
-    //         if (boardToken === currentPlayer) {
-    //             playerPattern.push(index);
-    //         } 
-    //     })
-    //         winPattern.forEach(function(thisPattern, index, array) {
-    //             if(thisPattern.every(element => playerPattern.indexOf(element) > -1)) {
-    //                 console.log("You won player " + currentPlayer);
-    //                 winner.gameOver = true;
-    //                 winner.playerName = currentPlayer;
-    //             }
-    //         })
-    //     return winner;
-    // }
-
-
-
 
 
 
